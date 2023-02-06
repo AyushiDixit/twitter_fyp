@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <style>
+        * {
+            padding: 0px;
+            margin: 0px;
+            background-color: transparent;
+        }
+
+        body {
+            background-color: transparent;
+            min-height: 100%;
+            height: 100%;
+            overflow: auto;
+        }
+
+
+        header {
+            background-color: black;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 10px 10px;
+            height: 10vh;
+            box-shadow: 5px 5px 10px rgb(0,0,0,0.3);
+        }
+
+        h1 {
+            letter-spacing: 1vw;
+            font-family: 'system-ui';
+            text-transform: uppercase;
+            text-align: center;
+        }
+
+        main {
+            display: flex;
+            flex: 1;
+            align-items: center;
+            justify-content: center;
+            height: 75vh;
+            width: 100%;
+            /*background: url(https://i.imgur.com/npPoTLE.png) no-repeat center center;*/
+            background: url(https://i.imgur.com/aOHqJjq.png) no-repeat center center;
+            /*background: url(https://upload.wikimedia.org/wikipedia/commons/thumb/0/0b/Mountains-1412683.svg/1280px-Mountains-1412683.svg.png) no-repeat center center;*/
+            background-size: cover;
+        }
+
+            main > p {
+                margin-left: 10vh;
+            }
+
+        .form_class {
+            width: 500px;
+            max-height: 75%;
+            overflow: auto;
+            padding: 40px;
+            border-radius: 8px;
+            background-color: white;
+            font-family: 'system-ui';
+            box-shadow: 5px 5px 10px rgb(0,0,0,0.3);
+        }
+
+            .form_class::-webkit-scrollbar {
+                display: none;
+            }
+
+
+
+            .form_div label {
+                letter-spacing: 1px;
+                font-size: 1rem;
+                text-align: right;
+                margin-top: 15px;
+                margin-right: 15px;
+                float: left;
+                clear: both;
+            }
+
+
+        .info_div {
+            text-align: center;
+            margin-top: 0px;
+            margin-bottom: 20px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            font-weight: bold;
+            font-size: 20px;
+        }
+
+
+        .field_class {
+            width: 75%;
+            border-radius: 6px;
+            border-style: solid;
+            border-width: 1px;
+            padding: 5px 0px;
+            text-indent: 6px;
+            margin-top: 10px;
+            margin-bottom: 5px;
+            font-family: 'system-ui';
+            font-size: 0.9rem;
+            letter-spacing: 2px;
+            float: left;
+        }
+
+        .edit_button {
+            border-style: none;
+            border-radius: 5px;
+            background-color: #AED4FF;
+            padding: 8px 20px;
+            font-family: 'system-ui';
+            text-transform: uppercase;
+            letter-spacing: .8px;
+            margin: auto;
+            margin-top: 10px;
+            box-shadow: 2px 2px 5px rgb(0,0,0,0.2);
+            cursor: pointer;
+            margin-left: 25%;
+            margin-right: 5%;
+        }
+
+        .cancel_button {
+            border-style: none;
+            border-radius: 5px;
+            background-color: #fc635e;
+            padding: 8px 20px;
+            font-family: 'system-ui';
+            text-transform: uppercase;
+            letter-spacing: .8px;
+            margin: auto;
+            margin-top: 20px;
+            box-shadow: 2px 2px 5px rgb(0,0,0,0.2);
+            cursor: pointer;
+        }
+
+        footer {
+            width: 100%;
+            height: 10%;
+            text-align: center;
+            height: 10vh;
+            background-color: black;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: auto;
+            box-shadow: -5px -5px 10px rgb(0,0,0,0.3);
+        }
+
+            footer > p {
+                text-align: center;
+                font-family: 'system-ui';
+                letter-spacing: 3px;
+            }
+
+                footer > p > a {
+                    text-decoration: none;
+                    color: white;
+                    font-weight: bold;
+                }
+
+        img {
+            display: block;
+            margin-left: auto;
+            margin-right: auto;
+            width: 50%;
+        }
+
+        .group_container {
+            display: grid;
+            grid-template-columns: 25% 85%
+        }
+
+        .flex_container {
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        .nav {
+            background-color: black;
+            border-top: 1px groove white;
+            font-family: 'system-ui';
+            margin: 0;
+            position: relative;
+            text-transform: uppercase;
+            text-align: center;
+        }
+
+            .nav a {
+                display: inline-flex;
+                padding: 10px;
+                text-decoration: none;
+                color: white;
+            }
+
+        .nav-center {
+            display: inline;
+        }
+
+        .nav a.active {
+            color: white;
+            font-weight: 500;
+            background-color: #9389BE;
+        }
+
+        .nav a:hover {
+            /*background-color: #9389BE;*/
+            font-weight: 500;
+            color: white;
+        }
+
+        .nav-right {
+            display: inline;
+            float: right;
+        }
+    </style>
+    <!-- Custom styles for this template-->
+    {% block head %}{% endblock %}
+
+
+</head>
+<body>
+    <div class="flex_container">
+        <header>
+            <h1>tweet analyzer 🕊️</h1>
+        </header>
+
+        <div class="nav">
+            <div class="nav-center">
+                <a href="{{ url_for('home') }}">Dashboard</a>
+                <a href="{{ url_for('record') }}">tweet record</a> -->
+                <a href="{{ url_for('profile') }}">Profile</a>
+                <!-- <a href="{{ url_for('record') }}">Tweet Record</a> -->
+            </div>
+            <div class="nav-right">
+                <a href="{{ url_for('login') }}">Log Out</a>
+            </div>
+        </div>
+
+        <div class="container body-content">
+            <main>
+                {% block content %}{% endblock %}
+                <hr />
+            </main>
+
+            <footer>
+                <p>&copy; Final Year Project {{ year }} </p>
+            </footer>
+        </div>
+
+        
+        {% block scripts %}{% endblock %}
+
+</body>
+</html>
