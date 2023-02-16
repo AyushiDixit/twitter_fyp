@@ -104,12 +104,29 @@
             letter-spacing: 2px;
             float: left;
         }
+        .field_class_update {
+            width: 75%;
+            border-radius: 6px;
+            border-style: solid;
+            border-width: 1px;
+            padding: 5px 0px;
+            text-indent: 6px;
+            margin-top: 10px;
+            margin-bottom: 5px;
+            font-family: 'system-ui';
+            font-size: 0.9rem;
+            letter-spacing: 2px;
+            float: left;
+            color: blue;
+        }
 
         .edit_button {
+            float: left;
+            display: flex;
             border-style: none;
             border-radius: 5px;
             background-color: #AED4FF;
-            padding: 8px 20px;
+            padding: 8px 15px;
             font-family: 'system-ui';
             text-transform: uppercase;
             letter-spacing: .8px;
@@ -120,6 +137,8 @@
             margin-left: 25%;
             margin-right: 5%;
         }
+
+
 
         .cancel_button {
             border-style: none;
@@ -199,6 +218,37 @@
         .nav-center {
             display: inline;
         }
+        .register_button {
+            display: flex;
+            border-style: none;
+            border-radius: 5px;
+            background-color: #AED4FF;
+            padding: 8px 15px;
+            font-family: 'system-ui';
+            text-transform: uppercase;
+            letter-spacing: .8px;
+            margin: auto;
+            margin-top: 10px;
+            margin-left: 10px;
+            box-shadow: 2px 2px 5px rgb(0,0,0,0.2);
+            cursor: pointer;
+        }
+        .back_button {
+            display: flex;
+            border-style: none;
+            border-radius: 5px;
+            background-color: #AED4FF;
+            padding: 8px 20px;
+            font-family: 'system-ui';
+            text-transform: uppercase;
+            letter-spacing: .8px;
+            margin: auto;
+            margin-top: 10px;
+            box-shadow: 2px 2px 5px rgb(0,0,0,0.2);
+            cursor: pointer;
+            margin-left: 15%;
+            margin-right: 12%;
+        }
 
         .nav a.active {
             color: white;
@@ -236,7 +286,7 @@
                 <!-- <a href="{{ url_for('record') }}">Tweet Record</a> -->
             </div>
             <div class="nav-right">
-                <a href="{{ url_for('login') }}">Log Out</a>
+                <a href="{{ url_for('logout') }}">Log Out</a>
             </div>
         </div>
 

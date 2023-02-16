@@ -11108,32 +11108,27 @@
                 <button type="submit">Search</button>
             </form>
         </div>
-        <table>
-            <tr>
-                <th>Twitter User</th>
-                <th>Negative Percentage</th>
-                <th>Netural Percentage</th>
-                <th>Positive Percentage</th>
-            </tr>
-            <tr>
-                <td>ABC</td>
-                <td>100%</td>
-                <td>0%</td>
-                <td>0%</td>
-            </tr>
-            <tr>
-                <td>LLL</td>
-                <td>1%%</td>
-                <td>20%</td>
-                <td>79%</td>
-            </tr>
-            <tr>
-                <td>Backuser test/td>
-                <td>17%%</td>
-                <td>33%</td>
-                <td>50%</td>
-            </tr>
-        </table>
+        <script src="https://unpkg.com/gridjs/dist/gridjs.umd.js"></script>
+        <script>
+            new gridjs.Grid({
+              columns: [
+                { id: 'Twitter_user', name: 'Twitter User' },
+                { id: 'Neg_percent', name: 'Negative Percentage' },
+                { id: 'Net_percent', name: 'Netural Percentage' },
+                { id: 'Pos_percent', name: 'Positive Percentage' },
+              ],
+              server: {
+                url: '/api/data',
+                then: results => results.data,
+              },
+              search: {
+                selector: (cell, rowIndex, cellIndex) => [0, 1, 4].includes(cellIndex) ? cell : null,
+              },
+              sort: true,
+              pagination: true,
+            }).render(document.getElementById('table'));
+          </script>
+
         <br /><br /><br />
         <div class="search-container">
             <form action="/action_page.php">
@@ -11143,38 +11138,24 @@
             </form>
         </div>
 
-        <table>
-            <tr>
-                <th>Date</th>
-                <th>User</th>
-                <th>Tweet</th>
-            </tr>
-            <tr>
-                <td>4/12/2022 13:10:23</td>
-                <td>Backuser test</td>
-                <td>bad tweets</td>
-            </tr>
-            <tr>
-                <td>4/12/2022 15:10:11</td>
-                <td>Backuser test</td>
-                <td>&#128512;&#128507;	&#128513;</td>
-            </tr>
-            <tr>
-                <td>Backuser test</td>
-                <td>5/12/2022 22:45:53</td>
-                <td>&#128515;&#128516;</td>
-            </tr>
-            <tr>
-                <td>Backuser test</td>
-                <td>5/12/2022 21:55:23</td>
-                <td>&#128515;&#128516;</td>
-            </tr>
-            <tr>
-                <td>Backuser test</td>
-                <td>6/12/2022 12:22:55</td>
-                <td>I hate police</td>
-            </tr>
-        </table>
+        <script>
+            new gridjs.Grid({
+              columns: [
+                { id: 'date', name: 'Date' },
+                { id: 'User', name: 'user' },
+                { id: 'Tweet', name: 'Tweet' },
+              ],
+              server: {
+                url: '/api/data',
+                then: results => results.data,
+              },
+              search: {
+                selector: (cell, rowIndex, cellIndex) => [0, 1, 4].includes(cellIndex) ? cell : null,
+              },
+              sort: true,
+              pagination: true,
+            }).render(document.getElementById('table'));
+          </script>
 
     </div>
 

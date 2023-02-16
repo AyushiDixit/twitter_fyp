@@ -3,7 +3,7 @@
 {% block title %}Profile{% endblock %}
 
 {% block content %}
-<h2>Profile Page</h2>
+
 <div>
 
     <div class="form_class">
@@ -11,17 +11,33 @@
             <p>my profile</p>
         </div>
         <form class="form_div">
+        <form id="profile_edit" action="{{ url_for('profile') }}" method="POST" >
             <div class="group_container">
                 <label for="username">Username:</label>
                 <input id="username" class="field_class" name="username" type="text" readonly value="{{ account['username'] }}">
-                <label for="username">Email:</label>
-                <input id="username" class="field_class" name="username" type="text" readonly value="{{ account['email'] }}">
-                <label for="username">Phone:</label>
-                <input id="username" class="field_class" name="username" type="text" readonly value="{{ account['phone'] }}">
+                <label for="email">Email:</label>
+                <input id="email" class="field_class" name="email" type="text" readonly value="{{ account['email'] }}">
+                <label for="phone">Phone:</label>
+                <input id="phone" class="field_class" name="phone" type="text" readonly value="{{ account['phone'] }}">
                 <label for="twt_user">Twitter username:</label>
                 <input id="twt_user" class="field_class" name="twitter_user_txt" type="text" readonly value="{{ account['twitter_username'] }}">
             </div>
+            <div class="msg">{{ msg }}</div>
+            <button class="edit_button" id='edit_button'type="submit" form="profile_edit">update profile</button>
+            <button class="register_button" id='uPw_button'type="submit" form="profile_edit">reset password</button>
         </form>
+        <script>
+            document.getElementById("edit_button").onclick = function () {
+                location.href = "{{ url_for('update') }}"
+
+            };
+            document.getElementById("uPw_button").onclick = function () {
+                location.href = "{{ url_for('changePW') }}"
+
+            };
+        </script>
+        
+
     </div>
 </div>
 {% endblock %}

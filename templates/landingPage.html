@@ -1,0 +1,58 @@
+{% extends 'adminlayout.html' %} {% block title %}Admin - Manage Records{% endblock %} {% block content %}
+<h1>Home</h1>
+
+
+<body>
+    <header>
+        <img src="logo.png" alt="Logo">
+        <nav>
+            <ul>
+                <li><a href="#login">Log In</a></li>
+                <li><a href="#services">Services</a></li>
+                <li><a href="#contact">Contact</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        <h1>Welcome to TweetAnalyser</h1>
+        <p>Your 1 stop shop for breaking down the chaos of social media</p>
+        <a href="#learn-more">Learn More</a>
+    </main>
+
+    <section id="about">
+        <h2>About Us</h2>
+        <p>We aim to help understand the health of your socials.</p>
+    </section>
+
+    <section id="services">
+        <h2>Our Services</h2>
+        <ul>
+            <li>Trial User</li>
+            <li>Premium User</li>
+        </ul>
+    </section>
+
+    <section id="contact">
+        <h2>Contact Us</h2>
+        <form action="#" method="post">
+            <label for="name">Name:</label>
+            <input type="text" id="name" name="name">
+
+            <label for="email">Email:</label>
+            <input type="email" id="email" name="email">
+
+            <label for="message">Message:</label>
+            <textarea id="message" name="message"></textarea>
+
+            <input type="submit" value="Submit">
+        </form>
+    </section>
+
+    <footer>
+        <p>Copyright © 2023 TweetAnalyser</p>
+    </footer>
+</body>
+
+</html>
+{% endblock %}
