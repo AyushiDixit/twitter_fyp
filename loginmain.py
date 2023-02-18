@@ -523,6 +523,36 @@ def adm_manage_records():
     # User is not loggedin redirect to login page
     return redirect(url_for('login'))
 
+@app.route("/adminMessage", methods=["GET", "POST"])
+def admMessage():
+    if 'logged_in' in session:
+        if session['username'] != 'admin':
+            return render_template("error_cus.html")
+        
+        else : 
+            cursor.execute("SELECT * FROM admin_contactUs")
+            data = cursor.fetchall()
+
+            if 'suspend_button' in request.form:
+                #check if username empty
+                
+                    
+                    username = request.form["name"]
+
+                    #update user details (status to suspend)
+                    #cursor.execute('UPDATE userDetails SET status = ? WHERE username = ?', ('suspended', username,))
+                    #mysql.connection.commit()
+
+                    #delete user from userDetails
+                    cursor.execute('DELETE from userDetails WHERE username = ?',(username,))
+                    conn.commit()
+
+                    msg = "user successfully suspended"
+                    return render_template("adminMessageRecord.html", data="", msg=msg)
+
+            return render_template("adminMessageRecord.html", data=data)
+    return redirect(url_for('login'))
+
 
 def percentage(part,whole):
  return 100 * float(part)/float(whole)
