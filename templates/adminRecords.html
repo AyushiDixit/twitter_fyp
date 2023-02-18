@@ -19,11 +19,11 @@
 <table class="table table-responsive" style="width:100%">
   <thead class="thead-light">
     <tr>
-      <th style="width: 10%" scope="col">ID</th>
+      
       <th style="width: 20%" scope="col">Name</th>
       <th style="width: 20%" scope="col">Email</th>
       <th style="width: 10%" scope="col">Phone number</th>
-      <th style="width: 10%" scope="col">Subscription Status</th>
+      
       <th style="width: 20%" scope="col">Twitter Handle</th>
       <th style="width: 20%" scope="col"></th>
     </tr>
@@ -32,20 +32,27 @@
   {% for item in data %}
   <form id="formrow" action="" method="post">
     <tr>
-      <th style="width: 10%" class="align-middle" scope="row">{{item['id']}}</th>
+      
       <td style="width: 20%" class="align-middle">{{item['username']}}</td>
       <td style="width: 20%" class="align-middle">{{item['email']}}</td>
       <td style="width: 20%" class="align-middle">{{item['phone']}}</td>
-      <td style="width: 10%" class="align-middle">{{item['status']}}</td>
+     
       <td style="width: 20%" class="align-middle">{{item['twitter_username']}}</td>
       <td style="width: 20%" class="align-middle">
-        <button type="button" name="suspend_button" value="Suspend" class="btn btn-danger">Suspend</button>
-        <button type="button" name="manage_button" value="Manage" class="btn btn-dark">Manage</button>
+        <button type="submit" id="suspend_button" name="suspend_button" value="{{item['username']}}" class="btn btn-danger">Suspend</button>
+        <button type="submit" id="manage_button" name="manage_button" value="{{item['username']}}" class="btn btn-dark">Manage</button>
       </td>
     </tr>
   </form>
   {% endfor %}
   </tbody>
 </table>
+
+<script>
+    document.getElementById("manage_button").onclick = function () {
+        location.href = "{{ url_for('adm_manage_records') }}"
+
+    };
+</script>
 
 {% endblock %}

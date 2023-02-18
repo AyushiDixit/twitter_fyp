@@ -30,16 +30,29 @@ app = Flask(__name__)
 app.secret_key = 'your secret key'
 
 
-@app.route('/')
+@app.route('/',methods=['GET', 'POST'])
 def landingPage():
     # Check if user is loggedin
+    msg = ''
     if 'logged_in' in session:
-        if session['username'] != 'riya':
+        if session['username'] != 'admin':
             return render_template('dashboard.html', username=session['username'])
         else : 
             return render_template('adminHome.html', username=session['username'])
-    # User is not loggedin redirect to login page
-    return render_template('landingPage.html')
+    #contact us part
+    if request.method == 'POST' and 'name' in request.form and 'email' in request.form and 'message' in request.form: 
+
+        name = request.form['name']
+        email = request.form['email']
+        message = request.form['message']
+        print(message)
+        
+
+        cursor.execute('INSERT INTO admin_contactUs VALUES(?,?,?)', (name, email, message,  ))
+        conn.commit()
+        msg ='success! we will contact you soon!'
+
+    return render_template('landingPage.html', msg=msg)
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -47,7 +60,7 @@ def login():
     if request.method == 'POST' and 'username' in request.form and 'password' in request.form:
         username = request.form['username']
         password = request.form['password'].encode()
-        cursor.execute("SELECT * FROM user_details WHERE username = ?" , (username, ))
+        cursor.execute("SELECT * FROM userDetails WHERE username = ?" , (username, ))
         # Compare the hashed password
         account = cursor.fetchall()
         if account:
@@ -57,8 +70,8 @@ def login():
                 session['logged_in'] = True
                 session['username'] = account[0][0]
 
-                if session['username'] == 'riya':
-                    return redirect(url_for('adminhome'))
+                if session['username'] == 'admin':
+                    return redirect(url_for('adm_records'))
 
                 return redirect(url_for('home'))
             else:
@@ -72,9 +85,9 @@ def login():
 @app.route('/home',methods=['GET', 'POST'])
 def home():
     if 'logged_in' in session:
-        if session['username'] != 'riya':
+        if session['username'] != 'admin':
             username = session['username']
-            cursor.execute('SELECT * FROM user_details WHERE username = ?', (username,))
+            cursor.execute('SELECT * FROM userDetails WHERE username = ?', (username,))
             account = cursor.fetchone()
 
             twit_user = account[0]
@@ -103,7 +116,7 @@ def home():
 @app.route('/adminhome')
 def adminhome():
     msg = ''
-    if session['username'] == 'riya':
+    if session['username'] == 'admin':
         return render_template('adminHome.html', username= session['username'])
     else :
         msg = 'unauthorised access'
@@ -128,7 +141,7 @@ def profile():
         msg =''
         username = session['username']
         # We need all the account info for the user so we can display it on the profile page
-        cursor.execute('SELECT * FROM user_details WHERE username = ?', (username,))
+        cursor.execute('SELECT * FROM userDetails WHERE username = ?', (username,))
         account = cursor.fetchone()
         # Show the profile page with account info
         return render_template('profile.html', account=account, msg=msg)
@@ -143,7 +156,7 @@ def update():
             username = session['username']
             phone = request.form['phone']
             twt_user = request.form['twitter_user_txt']
-            cursor.execute('UPDATE user_details set phone = ? , twitter_username = ? WHERE username = ?', (phone, twt_user, username,))
+            cursor.execute('UPDATE userDetails set phone = ? , twitter_username = ? WHERE username = ?', (phone, twt_user, username,))
             cursor.commit()
             return redirect(url_for('profile'))
 
@@ -152,7 +165,7 @@ def update():
         # Show the profile page with account info
         else :
             username = session['username']
-            cursor.execute('SELECT * FROM user_details WHERE username = ?',(username))
+            cursor.execute('SELECT * FROM userDetails WHERE username = ?',(username))
             account = cursor.fetchone()
             print('not working')
 
@@ -165,13 +178,13 @@ def update():
 def changePW():
     if 'logged_in' in session:
         msg =''
-        if session['username'] != 'riya':
+        if session['username'] != 'admin':
             username = session['username']
             if request.method == 'POST' and 'old_password' in request.form and 'password' in request.form and 'new_password1' in request.form:
                 if request.form['password'] == request.form['new_password1']:
                     oldpw = request.form['old_password'].encode()
                     #check if old pw matches 
-                    cursor.execute('SELECT * FROM user_details WHERE username = ?',(username))
+                    cursor.execute('SELECT * FROM userDetails WHERE username = ?',(username))
                     account = cursor.fetchall()
                     stored_password = account[0][1]
                     if bcrypt.checkpw(oldpw, stored_password):
@@ -181,7 +194,7 @@ def changePW():
                         global hashed 
                         hashed = bcrypt.hashpw(newpw, salt)
 
-                        cursor.execute('UPDATE user_details set password = ?  WHERE username = ?', (hashed, username,))
+                        cursor.execute('UPDATE userDetails set password = ?  WHERE username = ?', (hashed, username,))
                         cursor.commit()
                         msg = 'password successfully changed'
                         return render_template('changePW.html', msg=msg)
@@ -193,7 +206,7 @@ def changePW():
                     return render_template('changePW.html',  msg=msg)
             else: 
                 username = session['username']
-                cursor.execute('SELECT * FROM user_details WHERE username = ?',(username))
+                cursor.execute('SELECT * FROM userDetails WHERE username = ?',(username))
                 account = cursor.fetchone()
             return render_template('changePW.html', account=account, msg=msg)
         return redirect(url_for('adminhome'))
@@ -216,9 +229,9 @@ def register():
         phone = request.form['phone']
         twit_user = request.form['twitter_user_txt']
 
-        cursor.execute('SELECT * FROM user_details WHERE username = ?', (username,))
+        cursor.execute('SELECT * FROM userDetails WHERE username = ?', (username,))
         account = cursor.fetchone()
-        cursor.execute('select * from user_details where twitter_username = ?', (twit_user,))
+        cursor.execute('select * from userDetails where twitter_username = ?', (twit_user,))
         twitAccount = cursor.fetchone()
         # If account exists show error and validation checks
         if account:
@@ -236,11 +249,12 @@ def register():
             limit = 70
             query_builder = "from:" + twit_user
             df_tweets = pd.DataFrame(searchScraper(query_builder, limit), columns=['date', 'twit_username', 'tweet'])
+            status = 'none'
             if df_tweets.empty: 
                 msg = 'Your twitter account must be public for this servive. '
             # Account doesnt exists and the form data is valid, now insert new account into accounts table
             else: 
-                cursor.execute('INSERT INTO user_details VALUES (?, ?, ?, ?, ?)', (username, hashed, email,phone,twit_user))
+                cursor.execute('INSERT INTO userDetails VALUES (?, ?, ?, ?, ?,?)', (username, hashed, email,phone,twit_user,status))
                 conn.commit()
                 limit = 70
                 
@@ -330,7 +344,7 @@ def register():
 def record():
     if 'logged_in' in session:
         username = session['username']
-        cursor.execute('SELECT * FROM user_details WHERE username = ?', (username,))
+        cursor.execute('SELECT * FROM userDetails WHERE username = ?', (username,))
         account = cursor.fetchone()
         # Show the profile page with account info
 
@@ -385,7 +399,7 @@ def record():
 @app.route("/adminRecords", methods=["GET", "POST"])
 def adm_records():
     if 'logged_in' in session:
-        if session['username'] != 'riya':
+        if session['username'] != 'admin':
             return render_template("error_cus.html")
         
         else : 
@@ -394,18 +408,120 @@ def adm_records():
             if request.method == 'POST' and 'searchuserID' in request.form and (request.form['searchuserID'] != ""):
                 search_user = request.form['searchuserID']
 
-                cursor.execute('SELECT * FROM user_details where username = ? and twitter_username not like "riyasrnk"', (search_user,))
+                cursor.execute('SELECT * FROM userDetails where username = ?  ', (search_user,))
                 data = cursor.fetchall()
 
                 return render_template("adminRecords.html", data=data)
 
-            cursor.execute("SELECT * FROM user_details WHERE username NOT LIKE 'riya'")
+            if request.method == 'POST' and 'manage_button' in request.form:
+                user = (request.form['manage_button'])
+                return redirect(url_for('adm_manage_records', user=user))
+        
+        #if suspend button is pressed
+            if request.method == 'POST' and 'suspend_button' in request.form:
+                user = (request.form['suspend_button'])
+
+            #set status to suspend
+            #cursor.execute("UPDATE userDetails SET status='Suspended' where username = ?", (user,))
+            #mysql.connection.commit()
+            
+            #delete user from userDetails
+                cursor.execute('DELETE from userDetails WHERE username = ?',(user,))
+                conn.commit()
+                cursor.execute('DELETE from user_class_details where site_username = ?', (user,))
+                conn.commit()
+            
+
+            cursor.execute("SELECT * FROM userDetails WHERE username NOT LIKE 'admin'")
             data = cursor.fetchall()
 
             return render_template("adminRecords.html", data=data)
     return redirect(url_for('login'))
     
+@app.route("/adminManageRecords", methods=["GET", "POST"])
+def adm_manage_records():
 
+    # Check if user is loggedin
+    if 'logged_in' in session:
+
+        #declare variables
+        data = ""
+        search_user = ""
+        search_condition=""
+        msg = ""
+
+        #getting user from GET 
+        if(request.args.get('user')):
+            search_user = request.args.get('user')
+            cursor.execute('SELECT * from userDetails where username = ?', (search_user,))
+            data = cursor.fetchone()
+
+        #processing data
+        if request.method == 'POST':
+
+            #when search button is pressed, retrieve data
+            if 'searchuserID' in request.form and request.form['searchuserID'] != "":
+                if(search_condition == ""):
+                    search_condition = request.form['searchuserID']
+                    session['search_user'] = search_condition
+                    cursor.execute('SELECT * FROM userDetails where username = ?', (search_condition,))
+                    data = cursor.fetchone()
+            
+            #when update button is pressed
+            if 'update_button' in request.form:
+                if 'search_user' in session:
+                    search_user = session['search_user']
+
+                #check if fields empty
+                if request.form['username'] != "" and request.form['email'] != "" and request.form['phone_num'] != "" and request.form['twitter_user_txt'] != "" and request.form['sub_status'] != "":
+                    
+                    #retrieve variables from form
+                    sysID = request.form["SysID"]
+                    email = request.form["email"]
+                    phone = request.form["phone_num"]
+                    username = request.form["username"]
+                    twt_handle = request.form["twitter_user_txt"]
+                    status = request.form["sub_status"]
+                    print(search_user)
+                    print(username)
+
+                    #update user details
+                    cursor.execute('UPDATE userDetails SET username = ?, email = ?, phone = ?, twitter_username = ?, status = ? WHERE username = ?', (username, email, phone, twt_handle, status, search_user,))
+                    conn.commit()
+                    cursor.execute('update user_class_details set site_username = ?', (username,))
+
+                    msg = "user successfully updated"
+                    session.pop('search_user', None)
+                    return render_template("adminRecords.html", data="", msg=msg)
+                
+                else:
+                    msg = "please search for a user and enter blank fields"
+            
+            #when suspend button is clicked
+            if 'suspend_button' in request.form:
+                #check if username empty
+                if request.form["username"] != "":
+                    sysID = request.form["SysID"]
+                    username = request.form["username"]
+
+                    #update user details (status to suspend)
+                    #cursor.execute('UPDATE userDetails SET status = ? WHERE username = ?', ('suspended', username,))
+                    #mysql.connection.commit()
+
+                    #delete user from userDetails
+                    cursor.execute('DELETE from userDetails WHERE username = ?',(username,))
+                    conn.commit()
+
+                    msg = "user successfully suspended"
+                    return render_template("adminManageRecords.html", data="", msg=msg)
+
+                else:
+                    msg = "please search for a user"
+            
+        return render_template("adminManageRecords.html", search_condition= search_condition, data=data, msg=msg)
+    
+    # User is not loggedin redirect to login page
+    return redirect(url_for('login'))
 
 
 def percentage(part,whole):
