@@ -2,6 +2,22 @@ import pyodbc
 from flask import Flask, render_template, request, redirect, url_for, session
 import re
 import bcrypt
+import snscrape.modules.twitter as sntwitter
+import pandas as pd
+import joblib
+import os
+import re
+from textblob import TextBlob
+import sys
+import matplotlib.pyplot as plt
+import snscrape.modules.twitter as sntwitter
+import datetime
+import pandas as pd
+import numpy as np
+import snscrape.modules.twitter as sntwitter
+import nltk
+from nltk.sentiment.vader import SentimentIntensityAnalyzer
+
 
 conn_str = ("Driver={ODBC Driver 17 for SQL Server};"
             "Server=DESKTOP-H17S9H6;"
@@ -53,13 +69,34 @@ def login():
     return render_template('index.html', msg=msg)
 
 # http://localhost:5000/pythinlogin/home - this will be the home page, only accessible for loggedin users
-@app.route('/home')
+@app.route('/home',methods=['GET', 'POST'])
 def home():
-    # Check if user is loggedin
     if 'logged_in' in session:
         if session['username'] != 'riya':
-        # User is loggedin show them the home page
-            return render_template('dashboard.html', username=session['username'])
+            username = session['username']
+            cursor.execute('SELECT * FROM user_details WHERE username = ?', (username,))
+            account = cursor.fetchone()
+
+            twit_user = account[0]
+            #pull the values from database and then show on the dashboard or run the function everytime the generate report button is clicked
+            cursor.execute('SELECT * FROM user_class_details where site_username =?', (username,))
+            twitter_data = cursor.fetchall()
+            print(twitter_data)
+
+            positivet= twitter_data[0][0]
+            negativen = twitter_data[0][1]
+            neutraln= twitter_data[0][2]
+            totalTrial = twitter_data[0][3]
+
+            positive = percentage(positivet, totalTrial)
+            negative = percentage(negativen, totalTrial)
+            neutral = percentage(neutraln, totalTrial)
+            positive = format(positive, '.1f')
+            negative = format(negative, '.1f')
+            neutral = format(neutral, '.1f')
+
+
+            return render_template('dashboard.html', username=session['username'],totalTrial=totalTrial, neutral=neutral, positive=positive,negative=negative )
     # User is not loggedin redirect to login page
     return redirect(url_for('login'))
 
@@ -163,48 +200,31 @@ def changePW():
     return redirect(url_for('login'))
 
 
-@app.route('/record')
-def record():
-    # Check if user is loggedin
-    if 'logged_in' in session:
-        username = session['username']
-        # We need all the account info for the user so we can display it on the profile page
-        cursor.execute('SELECT * FROM user_details WHERE username = ?', (username,))
-        account = cursor.fetchone()
-        # Show the profile page with account info
-        return render_template('record.html', account=account)
-    # User is not loggedin redirect to login page
-    return redirect(url_for('login'))
-
 # http://localhost:5000/pythinlogin/register - this will be the registration page, we need to use both GET and POST requests
 @app.route('/register', methods=['GET', 'POST'])
 def register():
-    # Output message if something goes wrong...
     msg = ''
-    # Check if "username", "password" and "email" POST requests exist (user submitted form)
-
     if request.method == 'POST' and 'username' in request.form and 'password' in request.form and 'email' in request.form:
 
         password = request.form['password'].encode()
         salt = bcrypt.gensalt()
         global hashed 
         hashed = bcrypt.hashpw(password, salt)
-
-        # Create variables for easy access
         username = request.form['username']
         #password = request.form['password']
         email = request.form['email']
         phone = request.form['phone']
         twit_user = request.form['twitter_user_txt']
 
-
-                # Check if account exists using MySQL
-        
         cursor.execute('SELECT * FROM user_details WHERE username = ?', (username,))
         account = cursor.fetchone()
+        cursor.execute('select * from user_details where twitter_username = ?', (twit_user,))
+        twitAccount = cursor.fetchone()
         # If account exists show error and validation checks
         if account:
             msg = 'Account already exists!'
+        elif twitAccount: 
+            msg = 'twitterUsername already exists'
         elif not re.match(r'[^@]+@[^@]+\.[^@]+', email):
             msg = 'Invalid email address!'
         elif not re.match(r'[A-Za-z0-9]+', username):
@@ -212,11 +232,91 @@ def register():
         elif not username or not password or not email:
             msg = 'Please fill out the form!'
         else:
+
+            limit = 70
+            query_builder = "from:" + twit_user
+            df_tweets = pd.DataFrame(searchScraper(query_builder, limit), columns=['date', 'twit_username', 'tweet'])
+            if df_tweets.empty: 
+                msg = 'Your twitter account must be public for this servive. '
             # Account doesnt exists and the form data is valid, now insert new account into accounts table
-            cursor.execute('INSERT INTO user_details VALUES (?, ?, ?, ?, ?)', (username, hashed, email,phone,twit_user))
-            conn.commit()
-            msg = 'You have successfully registered! Proceed to sign in'
-            return redirect(url_for('login'))
+            else: 
+                cursor.execute('INSERT INTO user_details VALUES (?, ?, ?, ?, ?)', (username, hashed, email,phone,twit_user))
+                conn.commit()
+                limit = 70
+                
+
+                # build the SQL query
+                table_name = 'tweets_store'
+                columns = ', '.join(df_tweets.columns)
+                values = ', '.join(['?' for i in range(len(df_tweets.columns))])
+                query = f"INSERT INTO {table_name} ({columns}) VALUES ({values})"
+                for row in df_tweets.itertuples(index=False):
+                    cursor.execute(query, row)
+                    conn.commit()
+
+                #analyzinf and pusing first tweet data
+
+                positive = 0
+                negative = 0
+                neutral = 0
+                polarity = 0
+                tweet_list = []
+                neutral_list = []
+                negative_list = []
+                positive_list = []
+
+                noOfTweet = len(df_tweets['tweet'])
+
+                for tweet in df_tweets['tweet']:
+                #print(tweet.text)
+                    tweet_list.append(tweet)
+                    analysis = TextBlob(tweet)
+                    score = SentimentIntensityAnalyzer().polarity_scores(tweet)
+                    neg = score['neg']
+                    neu = score['neu']
+                    pos = score['pos']
+                    comp = score['compound']
+                    polarity += analysis.sentiment.polarity
+                
+                    if neg > pos:
+                        negative_list.append(tweet)
+                        negative += 1
+                    elif pos > neg:
+                        positive_list.append(tweet)
+                        positive += 1
+                    
+                    elif pos == neg:
+                        neutral_list.append(tweet)
+                        neutral += 1
+                    
+                positive = percentage(positive, noOfTweet)
+                negative = percentage(negative, noOfTweet)
+                neutral = percentage(neutral, noOfTweet)
+                polarity = percentage(polarity, noOfTweet)
+                positive = format(positive, '.1f')
+                negative = format(negative, '.1f')
+                neutral = format(neutral, '.1f')
+
+                tweet_list = pd.DataFrame(tweet_list)
+                neutral_list = pd.DataFrame(neutral_list)
+                negative_list = pd.DataFrame(negative_list)
+                positive_list = pd.DataFrame(positive_list)
+                totalTrial = len(tweet_list)
+                positiveT = len(positive_list)
+                negTweets = len(negative_list)
+                neutralTweets = len(neutral_list)
+                print("total tweets: ",totalTrial)
+                print("positive number: ",positiveT)
+                print("negative number: ", negTweets)
+                print("neutral number: ",neutralTweets)
+
+                
+                cursor.execute('INSERT INTO user_class_details VALUES(?,?,?,?,?,?)', (positiveT,negTweets,neutralTweets,totalTrial,twit_user, username,  ))
+                conn.commit()
+                
+
+                msg = 'You have successfully registered! Proceed to sign in'
+                return redirect(url_for('login'))
             
 
     else: 
@@ -224,6 +324,151 @@ def register():
         msg = 'Please fill out the form!'
     # Show registration form with message (if any)
     return render_template('register.html', msg=msg)
+
+
+@app.route('/record',methods=['GET', 'POST'])
+def record():
+    if 'logged_in' in session:
+        username = session['username']
+        cursor.execute('SELECT * FROM user_details WHERE username = ?', (username,))
+        account = cursor.fetchone()
+        # Show the profile page with account info
+
+        if request.method == 'POST':
+            user_input = request.form['tweetSearch']
+            print(user_input)
+            query_builder = "from:" + user_input
+            limit = 100
+            # pull their tweets and put in a dataframe
+            df = pd.DataFrame(searchScraper(query_builder, limit), columns=['Date', 'User', 'Tweet'])
+            print(df)
+            # clean the tweets
+            df['Tweet_processed'] = df['Tweet'].apply(cleanText)
+            new_df = df.loc[:, ['Date', 'User', 'Tweet']]
+            # run the dataframe tweets with the model
+            # load rf_model and vectorizer
+            rf_model = joblib.load("./rf_model.joblib")
+            vectorizer = joblib.load("./vectorizer.joblib")
+            countDict = analyze_user(df, rf_model, vectorizer)
+            # generate the data (positive/negative %)
+            print('Analysis of twitter user: @' + user_input)
+            print()
+            print('Total number of tweets labeled as: ')
+            print(countDict)
+            print()
+            print('Percentages of tweets labeled as: ')
+            percentDict = getPercentDict(countDict)
+            print(percentDict)
+            print()
+            print('Final classification of user (Negative/Neutral/Positive): ')
+            classification = max(countDict, key=countDict.get)
+            print(classification)
+
+            positive_t = countDict["Positive"]
+            negative_t = countDict["Negative"]
+
+
+            positiveP = percentDict["Positive"]
+            negativeP = percentDict["Negative"]
+            print(positiveP)
+            print(negativeP)
+
+
+
+            return render_template('record.html',classification=classification, positive_t=positive_t, negative_t=negative_t, positiveP=positiveP, negativeP=negativeP, column_names=new_df.columns.values, row_data=list(new_df.values.tolist()),
+                           link_column="User", zip=zip,)
+        return render_template('record.html')
+    return redirect(url_for('login'))
+
+
+
+@app.route("/adminRecords", methods=["GET", "POST"])
+def adm_records():
+    if 'logged_in' in session:
+        if session['username'] != 'riya':
+            return render_template("error_cus.html")
+        
+        else : 
+
+            # Search Feature
+            if request.method == 'POST' and 'searchuserID' in request.form and (request.form['searchuserID'] != ""):
+                search_user = request.form['searchuserID']
+
+                cursor.execute('SELECT * FROM user_details where username = ? and twitter_username not like "riyasrnk"', (search_user,))
+                data = cursor.fetchall()
+
+                return render_template("adminRecords.html", data=data)
+
+            cursor.execute("SELECT * FROM user_details WHERE username NOT LIKE 'riya'")
+            data = cursor.fetchall()
+
+            return render_template("adminRecords.html", data=data)
+    return redirect(url_for('login'))
+    
+
+
+
+def percentage(part,whole):
+ return 100 * float(part)/float(whole)
+
+# function for pulling tweets
+def searchScraper(query, limit):
+    tweets = []
+    for tweet in sntwitter.TwitterSearchScraper(query, top=True).get_items():
+        if len(tweets) == limit:
+            break
+        else:
+            tweets.append([tweet.date, tweet.user.username, tweet.content])
+    return tweets
+
+# function for data pre-processing
+def cleanText(text):
+    text = re.sub(r'@[A-Za-z0-9_]+', '', text) # Remove @mentions
+    text = re.sub(r'#', '', text) # Remove # symbol
+    text = re.sub(r'RT[\s]+', '', text) # Remove RT
+    text = re.sub(r'https?:\/\/\S+', '', text) # Remove hyperlink
+    return text
+
+# function to analyse sentiment for a SINGLE TWEET
+def analyze_sentiment(text, model, vectorizer):
+    scoreDict = {}
+    features = vectorizer.transform([text]).toarray()
+    prediction = model.predict_proba(features)
+    positive_prob = prediction[0][1] * 100
+    negative_prob = prediction[0][0] * 100
+    scoreDict['Positive'] = positive_prob
+    scoreDict['Negative'] = negative_prob
+    scoreLabel = max(scoreDict, key=scoreDict.get)
+    return scoreDict, scoreLabel, positive_prob,  negative_prob
+
+# function to analyse user's sentiment as a whole
+def analyze_user(df, model, vectorizer):
+    # init variables and dictionary
+    negative_count = 0
+    neutral_count = 0
+    positive_count = 0
+    for tweet in df['Tweet_processed']:
+        scoreDict, scoreLabel, positive_prob, negative_prob = analyze_sentiment(tweet, model, vectorizer)
+        # individual label count
+        if scoreLabel == 'Negative':
+            negative_count += 1
+        elif scoreLabel == 'Neutral':
+            neutral_count += 1
+        elif scoreLabel == 'Positive':
+            positive_count += 1
+    countDict = {'Negative': negative_count, 'Positive': positive_count}
+    return countDict
+        
+
+def getPercentDict(countDict):
+    percentDict = {}
+    for key, value in countDict.items():
+        rounded_value = round((value * 100 / sum(countDict.values())), 2)
+        string = str(rounded_value) + '%'
+        percentDict[key] = string
+    return percentDict
+        # individual label count
+
 
 
  

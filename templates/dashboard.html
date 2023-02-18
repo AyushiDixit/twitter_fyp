@@ -11095,7 +11095,7 @@
                             <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
                                 Negative Percentage
                             </div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800">0%</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{negative}}</div>
                         </div>
                         <div class="col-auto">
                             <i class="fas fa-calendar fa-2x text-gray-300"></i>
@@ -11114,7 +11114,7 @@
                             <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
                                 Postive Percentage
                             </div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800">0%</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{positive}}</div>
                         </div>
                         <div class="col-auto">
                             <i class="fas fa-dollar-sign fa-2x text-gray-300"></i>
@@ -11135,7 +11135,7 @@
                             </div>
                             <div class="row no-gutters align-items-center">
                                 <div class="col-auto">
-                                    <div class="h5 mb-0 mr-3 font-weight-bold text-gray-800">50%</div>
+                                    <div class="h5 mb-0 mr-3 font-weight-bold text-gray-800">{{neutral}}</div>
                                 </div>
                                 <div class="col">
                                     <div class="progress progress-sm mr-2">
@@ -11161,9 +11161,9 @@
                     <div class="row no-gutters align-items-center">
                         <div class="col mr-2">
                             <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
-                                Amount of Hateful Tweets
+                                Total Tweets
                             </div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800">18</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ totalTrial }}</div>
                         </div>
                         <div class="col-auto">
                             <i class="fas fa-comments fa-2x text-gray-300"></i>
@@ -11184,11 +11184,14 @@
                 <canvas id="myChart" style="width:100%;max-width:600px"></canvas>
 
                 <script>
+                    var neg ='{{negative}}'
+                    var pos = '{{positive}}'
+                    var neu = '{{neutral}}'
 var xValues = ["Postive", "Negative", "Netural"];
-var yValues = [30.3, 50.9, 18.8,];
+var yValues = [pos, neg, neu,];
 var barColors = [
-  "#b91d47",
   "#00aba9",
+  "#b91d47",
   "#2b5797",
   "#e8c3b9",
   "#1e7145"

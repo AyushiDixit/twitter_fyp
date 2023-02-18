@@ -1,0 +1,26 @@
+{% extends 'adminLayout.html' %}
+{% block head %}
+<style>
+    #sad{
+        height: 25vh;
+        width: 25%;
+        text-align: center;
+    }
+
+    .jumbotron{
+        text-align: center;
+        align-items: center;
+    }
+
+</style>
+{% endblock %}
+{% block title %}404 NOT FOUND{% endblock %}
+
+{% block content %}
+<div class="jumbotron">
+    <img id="sad" src="https://www.cambridge.org/elt/blog/wp-content/uploads/2019/07/Sad-Face-Emoji.png">
+    <h1>404 PAGE NOT FOUND!</h1>
+    <p>This page isn't available. Sorry about that.</p>
+    <a href="" class="btn btn-primary btn-lg">Go Back</a>
+</div>
+{% endblock %}
