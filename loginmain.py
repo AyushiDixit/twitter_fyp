@@ -88,9 +88,9 @@ def home():
         if session['username'] != 'admin':
             username = session['username']
             cursor.execute('SELECT * FROM userDetails WHERE username = ?', (username,))
-            account = cursor.fetchone()
+            account = cursor.fetchall()
 
-            twit_user = account[0]
+            twit_user = account[0][4]
             #pull the values from database and then show on the dashboard or run the function everytime the generate report button is clicked
             cursor.execute('SELECT * FROM user_class_details where site_username =?', (username,))
             twitter_data = cursor.fetchall()
@@ -107,6 +107,10 @@ def home():
             positive = format(positive, '.1f')
             negative = format(negative, '.1f')
             neutral = format(neutral, '.1f')
+
+            if request.method == 'POST' and 'generate_button' in request.form:
+                generateReport(twit_user, username)
+                return redirect(url_for('home', username = username))
 
 
             return render_template('dashboard.html', username=session['username'],totalTrial=totalTrial, neutral=neutral, positive=positive,negative=negative )
@@ -614,6 +618,75 @@ def getPercentDict(countDict):
         percentDict[key] = string
     return percentDict
         # individual label count
+
+
+def generateReport(twitter_username, username): 
+            limit = 70
+            query_builder = "from:" + twitter_username
+            df_tweets = pd.DataFrame(searchScraper(query_builder, limit), columns=['date', 'twit_username', 'tweet'])
+            positive = 0
+            negative = 0
+            neutral = 0
+            polarity = 0
+            tweet_list = []
+            neutral_list = []
+            negative_list = []
+            positive_list = []
+
+            noOfTweet = len(df_tweets['tweet'])
+
+            for tweet in df_tweets['tweet']:
+                #print(tweet.text)
+                tweet_list.append(tweet)
+                analysis = TextBlob(tweet)
+                score = SentimentIntensityAnalyzer().polarity_scores(tweet)
+                neg = score['neg']
+                neu = score['neu']
+                pos = score['pos']
+                comp = score['compound']
+                polarity += analysis.sentiment.polarity
+                        
+                if neg > pos:
+                    negative_list.append(tweet)
+                    negative += 1
+                elif pos > neg:
+                    positive_list.append(tweet)
+                    positive += 1
+                            
+                elif pos == neg:
+                    neutral_list.append(tweet)
+                    neutral += 1
+                            
+            positive = percentage(positive, noOfTweet)
+            negative = percentage(negative, noOfTweet)
+            neutral = percentage(neutral, noOfTweet)
+            polarity = percentage(polarity, noOfTweet)
+            positive = format(positive, '.1f')
+            negative = format(negative, '.1f')
+            neutral = format(neutral, '.1f')
+
+            tweet_list = pd.DataFrame(tweet_list)
+            neutral_list = pd.DataFrame(neutral_list)
+            negative_list = pd.DataFrame(negative_list)
+            positive_list = pd.DataFrame(positive_list)
+            totalTrial = len(tweet_list)
+            positiveT = len(positive_list)
+            negTweets = len(negative_list)
+            neutralTweets = len(neutral_list)
+            print("total tweets: ",totalTrial)
+            print("positive number: ",positiveT)
+            print("negative number: ", negTweets)
+            print("neutral number: ",neutralTweets)
+
+                        
+            cursor.execute('UPDATE user_class_details set positive = ? , negative = ?, neutral = ?, total = ? where site_username = ?', (positiveT,negTweets,neutralTweets,totalTrial, username,  ))
+            conn.commit()
+
+            return(positiveT,negTweets,neutralTweets,totalTrial, username)
+
+  
+
+    
 
 
 
