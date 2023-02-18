@@ -447,82 +447,85 @@ def adm_manage_records():
 
     # Check if user is loggedin
     if 'logged_in' in session:
+        if session['username'] == 'admin':
 
-        #declare variables
-        data = ""
-        search_user = ""
-        search_condition=""
-        msg = ""
+            #declare variables
+            data = ""
+            search_user = ""
+            search_condition=""
+            msg = ""
 
-        #getting user from GET 
-        if(request.args.get('user')):
-            search_user = request.args.get('user')
-            cursor.execute('SELECT * from userDetails where username = ?', (search_user,))
-            data = cursor.fetchone()
+            #getting user from GET 
+            if(request.args.get('user')):
+                search_user = request.args.get('user')
+                cursor.execute('SELECT * from userDetails where username = ?', (search_user,))
+                data = cursor.fetchone()
 
-        #processing data
-        if request.method == 'POST':
+            #processing data
+            if request.method == 'POST':
 
-            #when search button is pressed, retrieve data
-            if 'searchuserID' in request.form and request.form['searchuserID'] != "":
-                if(search_condition == ""):
-                    search_condition = request.form['searchuserID']
-                    session['search_user'] = search_condition
-                    cursor.execute('SELECT * FROM userDetails where username = ?', (search_condition,))
-                    data = cursor.fetchone()
-            
-            #when update button is pressed
-            if 'update_button' in request.form:
-                if 'search_user' in session:
-                    search_user = session['search_user']
-
-                #check if fields empty
-                if request.form['username'] != "" and request.form['email'] != "" and request.form['phone_num'] != "" and request.form['twitter_user_txt'] != "" and request.form['sub_status'] != "":
-                    
-                    #retrieve variables from form
-                    sysID = request.form["SysID"]
-                    email = request.form["email"]
-                    phone = request.form["phone_num"]
-                    username = request.form["username"]
-                    twt_handle = request.form["twitter_user_txt"]
-                    status = request.form["sub_status"]
-                    print(search_user)
-                    print(username)
-
-                    #update user details
-                    cursor.execute('UPDATE userDetails SET username = ?, email = ?, phone = ?, twitter_username = ?, status = ? WHERE username = ?', (username, email, phone, twt_handle, status, search_user,))
-                    conn.commit()
-                    cursor.execute('update user_class_details set site_username = ?', (username,))
-
-                    msg = "user successfully updated"
-                    session.pop('search_user', None)
-                    return render_template("adminRecords.html", data="", msg=msg)
+                #when search button is pressed, retrieve data
+                if 'searchuserID' in request.form and request.form['searchuserID'] != "":
+                    if(search_condition == ""):
+                        search_condition = request.form['searchuserID']
+                        session['search_user'] = search_condition
+                        cursor.execute('SELECT * FROM userDetails where username = ?', (search_condition,))
+                        data = cursor.fetchone()
                 
-                else:
-                    msg = "please search for a user and enter blank fields"
-            
-            #when suspend button is clicked
-            if 'suspend_button' in request.form:
-                #check if username empty
-                if request.form["username"] != "":
-                    sysID = request.form["SysID"]
-                    username = request.form["username"]
+                #when update button is pressed
+                if 'update_button' in request.form:
+                    if 'search_user' in session:
+                        search_user = session['search_user']
 
-                    #update user details (status to suspend)
-                    #cursor.execute('UPDATE userDetails SET status = ? WHERE username = ?', ('suspended', username,))
-                    #mysql.connection.commit()
+                    #check if fields empty
+                    if request.form['username'] != "" and request.form['email'] != "" and request.form['phone_num'] != "" and request.form['twitter_user_txt'] != "" and request.form['sub_status'] != "":
+                        
+                        #retrieve variables from form
+                        sysID = request.form["SysID"]
+                        email = request.form["email"]
+                        phone = request.form["phone_num"]
+                        username = request.form["username"]
+                        twt_handle = request.form["twitter_user_txt"]
+                        status = request.form["sub_status"]
+                        print(search_user)
+                        print(username)
 
-                    #delete user from userDetails
-                    cursor.execute('DELETE from userDetails WHERE username = ?',(username,))
-                    conn.commit()
+                        #update user details
+                        cursor.execute('UPDATE userDetails SET username = ?, email = ?, phone = ?, twitter_username = ?, status = ? WHERE username = ?', (username, email, phone, twt_handle, status, search_user,))
+                        conn.commit()
+                        cursor.execute('update user_class_details set site_username = ?', (username,))
 
-                    msg = "user successfully suspended"
-                    return render_template("adminManageRecords.html", data="", msg=msg)
+                        msg = "user successfully updated"
+                        session.pop('search_user', None)
+                        return render_template("adminRecords.html", data="", msg=msg)
+                    
+                    else:
+                        msg = "please search for a user and enter blank fields"
+                
+                #when suspend button is clicked
+                if 'suspend_button' in request.form:
+                    #check if username empty
+                    if request.form["username"] != "":
+                        sysID = request.form["SysID"]
+                        username = request.form["username"]
 
-                else:
-                    msg = "please search for a user"
-            
-        return render_template("adminManageRecords.html", search_condition= search_condition, data=data, msg=msg)
+                        #update user details (status to suspend)
+                        #cursor.execute('UPDATE userDetails SET status = ? WHERE username = ?', ('suspended', username,))
+                        #mysql.connection.commit()
+
+                        #delete user from userDetails
+                        cursor.execute('DELETE from userDetails WHERE username = ?',(username,))
+                        conn.commit()
+
+                        msg = "user successfully suspended"
+                        return render_template("adminManageRecords.html", data="", msg=msg)
+
+                    else:
+                        msg = "please search for a user"
+                
+            return render_template("adminManageRecords.html", search_condition= search_condition, data=data, msg=msg)
+        else:
+            return render_template("error_cus.html")
     
     # User is not loggedin redirect to login page
     return redirect(url_for('login'))
