@@ -540,22 +540,21 @@ def admMessage():
             cursor.execute("SELECT * FROM admin_contactUs")
             data = cursor.fetchall()
 
-            if 'suspend_button' in request.form:
+            # if 'suspend_button' in request.form:
+            if request.method == 'POST' and 'suspend_button' in request.form:
+                user = (request.form['suspend_button'])
+                print(user)
                 #check if username empty
-                
-                    
-                    username = request.form["name"]
-
                     #update user details (status to suspend)
                     #cursor.execute('UPDATE userDetails SET status = ? WHERE username = ?', ('suspended', username,))
                     #mysql.connection.commit()
 
                     #delete user from userDetails
-                    cursor.execute('DELETE from userDetails WHERE username = ?',(username,))
-                    conn.commit()
+                cursor.execute('DELETE from admin_contactUs WHERE name = ?',(user,))
+                conn.commit()
 
-                    msg = "user successfully suspended"
-                    return render_template("adminMessageRecord.html", data="", msg=msg)
+                msg = "user successfully suspended"
+                return render_template("adminMessageRecord.html", data="", msg=msg)
 
             return render_template("adminMessageRecord.html", data=data)
     return redirect(url_for('login'))
